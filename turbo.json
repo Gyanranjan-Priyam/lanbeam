@@ -1,11 +1,19 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "agentGuidance": true,
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "outputs": ["out/**", "dist/**"]
+    },
+    "generate": {
+      "inputs": ["openapi.yaml"],
+      "outputs": ["src/schema.d.ts"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
     },
     "lint": {
       "dependsOn": ["^lint"]

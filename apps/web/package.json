@@ -1,28 +1,41 @@
 {
-  "name": "web",
+  "name": "@lanbeam/web",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
-    "next": "16.3.8",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "next": "^15.2.0",
+    "lucide-react": "^1.58.0",
+    "zustand": "^5.0.5",
+    "openapi-fetch": "^0.14.0",
+    "@lanbeam/protocol": "workspace:*"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
-    "@types/node": "26.4.1",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
-    "eslint": "10.9.1",
-    "typescript": "7.0.2"
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^10.13.0",
+    "jsdom": "^26.0.0",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^4.1.8",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^3.0.7"
   }
 }

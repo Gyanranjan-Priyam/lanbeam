@@ -1,0 +1,624 @@
+openapi: "3.1.0"
+info:
+  title: LanBeam Protocol API
+  version: "1.0.0"
+  description: |
+    LanBeam protocol API v1 — Peer, Control, and Guest APIs.
+    This file is the single source of truth. Go and TypeScript code is generated from it.
+
+servers:
+  - url: https://{host}:42100
+    description: LAN listener (TLS) — Peer API and Guest API
+    variables:
+      host:
+        default: "192.168.1.x"
+  - url: http://127.0.0.1:42101
+    description: Control listener (localhost only) — Control API
+
+paths:
+  # ── Peer API ─────────────────────────────────────────────────────────────────
+
+  /api/v1/info:
+    get:
+      operationId: peerGetInfo
+      summary: Get device identity
+      tags: [peer]
+      responses:
+        "200":
+          description: Device identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InfoResponse"
+
+  /api/v1/prepare-send:
+    post:
+      operationId: peerPrepareSend
+      summary: Offer files for transfer (blocks until accepted/rejected/timeout)
+      tags: [peer]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrepareSendRequest"
+      responses:
+        "200":
+          description: Transfer accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrepareSendResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+
+  /api/v1/send/{sessionId}/{fileId}:
+    put:
+      operationId: peerSendFile
+      summary: Stream file bytes to receiver
+      tags: [peer]
+      parameters:
+        - $ref: "#/components/parameters/sessionId"
+        - $ref: "#/components/parameters/fileId"
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Upload-Offset
+          in: header
+          schema:
+            type: integer
+            default: 0
+        - name: Content-Length
+          in: header
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: File received and verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendFileResponse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+    head:
+      operationId: peerGetOffset
+      summary: Get current upload offset (for resume)
+      tags: [peer]
+      parameters:
+        - $ref: "#/components/parameters/sessionId"
+        - $ref: "#/components/parameters/fileId"
+      responses:
+        "200":
+          description: Current offset
+          headers:
+            Upload-Offset:
+              schema:
+                type: integer
+
+  /api/v1/cancel/{sessionId}:
+    post:
+      operationId: peerCancelSession
+      summary: Cancel a transfer session
+      tags: [peer]
+      parameters:
+        - $ref: "#/components/parameters/sessionId"
+      responses:
+        "204":
+          description: Cancelled
+
+  # ── Control API ───────────────────────────────────────────────────────────────
+
+  /control/v1/self:
+    get:
+      operationId: controlGetSelf
+      summary: Own identity, IPs, ports, and settings
+      tags: [control]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Self info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SelfResponse"
+
+  /control/v1/peers:
+    get:
+      operationId: controlListPeers
+      summary: Known peers with online status
+      tags: [control]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Peer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PeerInfo"
+
+  /control/v1/peers/manual:
+    post:
+      operationId: controlAddPeer
+      summary: Add a peer by IP address
+      tags: [control]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address]
+              properties:
+                address:
+                  type: string
+                  example: "192.168.1.5:42100"
+      responses:
+        "200":
+          description: Peer info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeerInfo"
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /control/v1/send:
+    post:
+      operationId: controlSend
+      summary: Start a send to a peer
+      tags: [control]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendRequest"
+      responses:
+        "200":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+
+  /control/v1/transfers:
+    get:
+      operationId: controlListTransfers
+      summary: Active and historical transfers
+      tags: [control]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Transfer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransferSummary"
+
+  /control/v1/transfers/{id}/accept:
+    post:
+      operationId: controlAcceptTransfer
+      summary: Accept an incoming offer
+      tags: [control]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                acceptedFileIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "204":
+          description: Accepted
+
+  /control/v1/transfers/{id}/reject:
+    post:
+      operationId: controlRejectTransfer
+      summary: Reject an incoming offer
+      tags: [control]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Rejected
+
+  /control/v1/transfers/{id}/cancel:
+    post:
+      operationId: controlCancelTransfer
+      summary: Cancel a transfer
+      tags: [control]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cancelled
+
+  /control/v1/settings:
+    patch:
+      operationId: controlUpdateSettings
+      summary: Update settings
+      tags: [control]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingsPatch"
+
+  /control/v1/diagnostics:
+    get:
+      operationId: controlGetDiagnostics
+      summary: Network interfaces, discovery status, recent errors
+      tags: [control]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Diagnostics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticsResponse"
+
+  # ── Guest API ─────────────────────────────────────────────────────────────────
+
+  /guest/v1/pair:
+    post:
+      operationId: guestPair
+      summary: Pair with host using one-time token
+      tags: [guest]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Pairing initiated, code shown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "4821"
+                  guestId:
+                    type: string
+        "403":
+          $ref: "#/components/responses/Error"
+        "410":
+          $ref: "#/components/responses/Error"
+
+  /guest/v1/pair/status:
+    get:
+      operationId: guestPairStatus
+      summary: Poll for host approval (long-poll)
+      tags: [guest]
+      responses:
+        "200":
+          description: Approval granted, bearer token returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bearerToken:
+                    type: string
+        "202":
+          description: Still waiting
+        "403":
+          description: Denied
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    sessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+    fileId:
+      name: fileId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+    InfoResponse:
+      type: object
+      required: [protocolVersion, appVersion, alias, deviceType, fingerprint, acceptingTransfers]
+      properties:
+        protocolVersion:
+          type: integer
+          example: 1
+        appVersion:
+          type: string
+          example: "0.1.0"
+        alias:
+          type: string
+          example: "Ravi-Laptop"
+        deviceType:
+          type: string
+          enum: [desktop, mobile, web, other]
+        fingerprint:
+          type: string
+          example: "a3f9c1d2e4..."
+        acceptingTransfers:
+          type: boolean
+
+    FileInfo:
+      type: object
+      required: [id, name, size]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        relPath:
+          type: string
+        size:
+          type: integer
+          format: int64
+        mime:
+          type: string
+        hash:
+          type: string
+
+    SenderInfo:
+      type: object
+      required: [alias, deviceType, fingerprint]
+      properties:
+        alias:
+          type: string
+        deviceType:
+          type: string
+        fingerprint:
+          type: string
+
+    PrepareSendRequest:
+      type: object
+      required: [sender]
+      properties:
+        sender:
+          $ref: "#/components/schemas/SenderInfo"
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileInfo"
+        text:
+          type: string
+          nullable: true
+
+    PrepareSendResponse:
+      type: object
+      required: [sessionId, files]
+      properties:
+        sessionId:
+          type: string
+        files:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              token:
+                type: string
+              offset:
+                type: integer
+                format: int64
+
+    SendFileResponse:
+      type: object
+      properties:
+        fileId:
+          type: string
+        status:
+          type: string
+        savedAs:
+          type: string
+
+    PeerInfo:
+      type: object
+      properties:
+        fingerprint:
+          type: string
+        alias:
+          type: string
+        deviceType:
+          type: string
+        online:
+          type: boolean
+        trusted:
+          type: boolean
+        lastSeen:
+          type: string
+          format: date-time
+        via:
+          type: string
+
+    SelfResponse:
+      type: object
+      properties:
+        fingerprint:
+          type: string
+        alias:
+          type: string
+        deviceType:
+          type: string
+        lanPort:
+          type: integer
+        controlPort:
+          type: integer
+        downloadDir:
+          type: string
+
+    SendRequest:
+      type: object
+      required: [peerFingerprint, filePaths]
+      properties:
+        peerFingerprint:
+          type: string
+        filePaths:
+          type: array
+          items:
+            type: string
+
+    TransferSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        direction:
+          type: string
+          enum: [send, receive]
+        peerAlias:
+          type: string
+        status:
+          type: string
+        totalBytes:
+          type: integer
+          format: int64
+        bytesDone:
+          type: integer
+          format: int64
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+
+    SettingsPatch:
+      type: object
+      properties:
+        alias:
+          type: string
+        downloadDir:
+          type: string
+        autoAcceptTrusted:
+          type: boolean
+        maxConcurrentFiles:
+          type: integer
+        offerTimeoutSec:
+          type: integer
+        interface:
+          type: string
+
+    DiagnosticsResponse:
+      type: object
+      properties:
+        interfaces:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              addresses:
+                type: array
+                items:
+                  type: string
+        discoveryStatus:
+          type: object
+          additionalProperties:
+            type: string
+        recentErrors:
+          type: array
+          items:
+            type: string

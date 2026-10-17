@@ -26,6 +26,11 @@ coverage
 out/
 build
 dist
+dist-guest
+*.tsbuildinfo
+/core/lanbeam
+lanbeam
+lanbeam.exe
 
 
 # Debug

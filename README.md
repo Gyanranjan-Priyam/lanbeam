@@ -1,159 +1,98 @@
-# Turborepo starter
+# LanBeam (working name)
 
-This Turborepo starter is maintained by the Turborepo core team.
+> Offline-first file transfer over your local network. Think **LocalSend + AirDrop + Quick Share**, with a **zero-install web client**. No internet, no accounts, no cloud.
 
-## Using this example
+*"LanBeam" is a placeholder. Rename it, and check that the name and domain are free before you publish anything.*
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## 1. Vision
+
+Send any file, folder, text, or clipboard content between any two devices on the same Wi-Fi network (or a phone hotspot, or a router with no internet) with one tap and no setup.
+
+## 2. Goals
+
+- **Fully offline.** Nothing ever leaves the local network. No STUN/TURN, no relay servers, no analytics, no accounts.
+- **Cross-platform.** Windows, macOS, Linux, Android, iOS, and any modern browser.
+- **Fast.** Limited by the Wi-Fi link, not by the app.
+- **Private and secure.** Encrypted transport, explicit receiver approval, device identity via certificate fingerprints.
+- **Simple UX.** Nearby devices appear automatically; transfer takes two taps.
+- **One codebase per concern.** Go for the core, TypeScript for every UI.
+
+## 3. Non-goals (for v1)
+
+- Interoperating with Apple AirDrop or Google Quick Share. Both are closed protocols (AWDL, BLE, Wi-Fi Direct). "Hybrid" here means matching their UX, not their wire protocol.
+- Transfer over the internet or across different networks.
+- Cloud sync, accounts, or backup.
+- IPv6-only networks (IPv4 first; IPv6 later).
+- Background transfers on iOS (the platform restricts this heavily).
+
+## 4. Platform roles
+
+| Platform | Role | Can discover peers | Send | Receive | Planned phase |
+|---|---|---|---|---|---|
+| Windows / macOS / Linux | Full peer | Yes | Yes | Yes | 1–5 |
+| Android | Full peer | Yes (native NSD plus Go fallbacks) | Yes | Yes | 6 |
+| iOS | Full peer (foreground) | Yes (Bonjour) | Yes | Yes | 7 |
+| Web browser | Guest (via QR/URL to a host peer) | No | Via host | Via host | 4 |
+
+## 5. Guiding principles
+
+1. **The Go core owns all networking.** UIs only talk to the core over local HTTP/WebSocket.
+2. **Always have a fallback.** Discovery has four layers (mDNS, multicast, subnet scan, manual IP/QR) because networks are hostile.
+3. **Stream, never buffer.** Constant memory use regardless of file size.
+4. **Receiver is always in control.** No file is written without approval (unless the sender is explicitly trusted).
+5. **Spec first.** The protocol and API are documented and versioned before code is written.
+
+## 6. Document index
+
+| File | Purpose |
+|---|---|
+| [`docs/TECH_STACK.md`](docs/TECH_STACK.md) | Technology choices, alternatives, and decision log |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, components, data model, state machines |
+| [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | Discovery and transfer protocol, API reference |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model, identity, pairing, hardening |
+| [`docs/PHASES.md`](docs/PHASES.md) | All project phases with tasks, deliverables, and exit criteria |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Step-by-step build guide with code skeletons and first sprints |
+| [`docs/PLATFORM_NOTES.md`](docs/PLATFORM_NOTES.md) | Per-platform requirements, permissions, and limitations |
+| [`docs/UX_DESIGN.md`](docs/UX_DESIGN.md) | Screens, flows, states, and microcopy |
+| [`docs/TESTING.md`](docs/TESTING.md) | Test strategy, network matrix, performance targets |
+| [`docs/RISKS.md`](docs/RISKS.md) | Risk register and mitigations |
+| [`docs/adr/`](docs/adr/) | Architecture Decision Records (ADRs) |
+
+## 7. Quickstart
+
+### Prerequisites
+- **Go**: 1.24+ (1.27+ supported)
+- **Node.js**: v20+ / v24+
+- **bun**: package manager
+
+### Build and Run
+```bash
+# Install dependencies
+bun install
+
+# Generate TypeScript & Go code from OpenAPI specification
+make gen
+
+# Build UI and core Go binary
+make build
+
+# Run unit tests across core Go modules and UI
+make test
+
+# Start UI development server
+make dev-ui
+
+# Start Core Go daemon
+make dev-core
 ```
 
-## What's inside?
+## 8. Status
 
-This Turborepo includes the following packages/apps:
+- **Phase 0 (Foundations and spec):** Completed ✅
+- **Phase 1 (Core transfer engine):** In progress 🚀
 
-### Apps and Packages
+## 9. License
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-bun exec turbo build
-bun exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-bun exec turbo build --filter=docs
-bun exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-bun exec turbo dev
-bun exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-bun exec turbo dev --filter=web
-bun exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-bun exec turbo login
-bun exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-bun exec turbo link
-bun exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+MIT License — see [LICENSE](LICENSE) for details.
