@@ -20,35 +20,42 @@ export interface TransferSession {
   bytesDone: number;
   totalBytes: number;
   speedBytesPerSec: number;
-  status: "pending" | "transferring" | "verifying" | "completed" | "failed" | "cancelled";
+  status: "pending" | "transferring" | "verifying" | "completed" | "failed" | "cancelled" | "rejected" | "offered";
 }
 
 interface PeerStore {
   myAlias: string;
   myFingerprint: string;
   lanPort: number;
+  serverConnected: boolean;
   peers: Record<string, DiscoveredPeer>;
   transfers: Record<string, TransferSession>;
   pendingOffer: TransferSession | null;
   setSelf: (alias: string, fingerprint: string, port: number) => void;
+  setServerConnected: (connected: boolean) => void;
   upsertPeer: (peer: DiscoveredPeer) => void;
   setPeerOffline: (fingerprint: string) => void;
+  setPeersList: (peers: DiscoveredPeer[]) => void;
   addTransfer: (session: TransferSession) => void;
+  setTransfersList: (transfers: TransferSession[]) => void;
   updateTransferProgress: (sessionId: string, bytesDone: number, speed: number) => void;
   setTransferStatus: (sessionId: string, status: TransferSession["status"]) => void;
   setPendingOffer: (offer: TransferSession | null) => void;
 }
 
 export const usePeerStore = create<PeerStore>((set) => ({
-  myAlias: "My Device",
-  myFingerprint: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  myAlias: "",
+  myFingerprint: "",
   lanPort: 42100,
+  serverConnected: false,
   peers: {},
   transfers: {},
   pendingOffer: null,
 
   setSelf: (alias, fingerprint, port) =>
     set({ myAlias: alias, myFingerprint: fingerprint, lanPort: port }),
+
+  setServerConnected: (connected) => set({ serverConnected: connected }),
 
   upsertPeer: (peer) =>
     set((state) => ({
@@ -57,6 +64,15 @@ export const usePeerStore = create<PeerStore>((set) => ({
         [peer.fingerprint]: { ...peer, online: true },
       },
     })),
+
+  setPeersList: (peerList) =>
+    set(() => {
+      const newPeers: Record<string, DiscoveredPeer> = {};
+      for (const p of peerList) {
+        newPeers[p.fingerprint] = p;
+      }
+      return { peers: newPeers };
+    }),
 
   setPeerOffline: (fingerprint) =>
     set((state) => {
@@ -74,6 +90,15 @@ export const usePeerStore = create<PeerStore>((set) => ({
     set((state) => ({
       transfers: { ...state.transfers, [session.sessionId]: session },
     })),
+
+  setTransfersList: (transferList) =>
+    set(() => {
+      const newTransfers: Record<string, TransferSession> = {};
+      for (const t of transferList) {
+        newTransfers[t.sessionId] = t;
+      }
+      return { transfers: newTransfers };
+    }),
 
   updateTransferProgress: (sessionId, bytesDone, speed) =>
     set((state) => {

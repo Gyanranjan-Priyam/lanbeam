@@ -3,7 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev & (cd core && go run ./cmd/lanbeam)",
+    "dev:server": "cd core && go run ./cmd/lanbeam",
+    "start:server": "cd core && go run ./cmd/lanbeam",
+    "dev:all": "turbo run dev & (cd core && go run ./cmd/lanbeam)",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",

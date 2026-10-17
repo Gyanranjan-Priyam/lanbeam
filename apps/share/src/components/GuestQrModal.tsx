@@ -15,8 +15,10 @@ export const GuestQrModal: React.FC<GuestQrModalProps> = ({ isOpen, onClose }) =
 
   if (!isOpen) return null;
 
-  // LAN guest URL template
-  const guestUrl = `http://192.168.1.100:${lanPort}/g/`;
+  const host = typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost"
+    ? window.location.hostname
+    : "127.0.0.1";
+  const guestUrl = `http://${host}:${lanPort}/g/`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(guestUrl);

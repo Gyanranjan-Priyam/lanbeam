@@ -1,41 +1,35 @@
 {
-  "name": "@lanbeam/web",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings 0",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "check-types": "tsc --noEmit"
+    "lint": "eslint"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "next": "^15.2.0",
-    "lucide-react": "^1.58.0",
-    "zustand": "^5.0.5",
-    "openapi-fetch": "^0.14.0",
-    "@lanbeam/protocol": "workspace:*"
+    "next": "16.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tailwindcss/postcss": "^4.1.8",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.2.0",
-    "@types/node": "^22.13.0",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^10.13.0",
-    "jsdom": "^26.0.0",
-    "postcss": "^8.5.4",
-    "tailwindcss": "^4.1.8",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.71.2",
-    "vitest": "^3.0.7"
-  }
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "packageManager": "bun@1.4.3",
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "sharp",
+    "unrs-resolver"
+  ]
 }

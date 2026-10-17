@@ -114,3 +114,15 @@ func (m *Manager) Cancel(id string) {
 	}
 	s.Status = StatusCancelled
 }
+
+// List returns all transfer sessions.
+func (m *Manager) List() []*Session {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]*Session, 0, len(m.sessions))
+	for _, s := range m.sessions {
+		res = append(res, s)
+	}
+	return res
+}
+

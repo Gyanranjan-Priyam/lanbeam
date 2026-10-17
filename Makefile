@@ -17,26 +17,27 @@ gen-go:
 		-generate types -package api -o internal/api/types.gen.go ../packages/protocol/openapi.yaml
 
 ## Build targets
-build: build-web build-core
+build: build-share build-core
 
-build-web:
-	$(BUN) run --cwd apps/web build
+build-share:
+	$(BUN) run --cwd apps/share build
+
+build-web: build-share
 
 build-core:
 	cd core && $(GO) build -o ../lanbeam ./cmd/lanbeam
 
 ## Testing
-test: test-core test-web
+test: test-core test-share
 
-test-core:
-	cd core && $(GO) test -v -race ./...
+test-share:
+	$(BUN) run --cwd apps/share test
+	$(BUN) run --cwd apps/share check-types
 
-test-web:
-	$(BUN) run --cwd apps/web test
-	$(BUN) run --cwd apps/web check-types
+test-web: test-share
 
 ## Linting & Formatting
-lint: lint-core lint-web
+lint: lint-core lint-share
 
 lint-core:
 	@if command -v golangci-lint >/dev/null 2>&1; then \
@@ -45,19 +46,26 @@ lint-core:
 		cd core && $(GO) vet ./...; \
 	fi
 
-lint-web:
-	$(BUN) run --cwd apps/web lint
+lint-share:
+	$(BUN) run --cwd apps/share lint
+
+lint-web: lint-share
 
 format:
 	cd core && $(GO) fmt ./...
 	$(BUN) run prettier --write "**/*.{ts,tsx,js,json,md,yaml,yml}"
 
 ## Dev servers
-dev-web:
-	$(BUN) run --cwd apps/web dev
+dev-share:
+	$(BUN) run --cwd apps/share dev
+
+dev-web: dev-share
 
 dev-core:
 	cd core && $(GO) run ./cmd/lanbeam
 
+start-core: dev-core
+run: dev-core
+
 clean:
-	rm -rf lanbeam core/lanbeam apps/web/out apps/web/.next
+	rm -rf lanbeam core/lanbeam apps/share/out apps/share/.next apps/web/out apps/web/.next

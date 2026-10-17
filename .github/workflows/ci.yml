@@ -72,10 +72,10 @@ jobs:
         run: bun run --cwd packages/protocol check-types
 
       - name: Run Vitest tests
-        run: bun run --cwd apps/web test
+        run: bun run --cwd apps/share test
 
-      - name: Typecheck Web App
-        run: bun run --cwd apps/web check-types
+      - name: Typecheck Share App
+        run: bun run --cwd apps/share check-types
 
-      - name: Build Web App (Next.js Export)
-        run: bun run --cwd apps/web build
+      - name: Build Share App (Next.js Export)
+        run: bun run --cwd apps/share build

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Radio, QrCode, Settings, ShieldCheck, Laptop } from "lucide-react";
+import { Radio, QrCode, Settings, Laptop } from "lucide-react";
 import { usePeerStore } from "@/store/usePeerStore";
 
 interface NavbarProps {
@@ -10,7 +10,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenQr, onOpenSettings }) => {
-  const { myAlias, lanPort } = usePeerStore();
+  const { myAlias, lanPort, serverConnected } = usePeerStore();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#090a0f]/80 backdrop-blur-xl">
@@ -34,9 +34,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQr, onOpenSettings }) => {
           {/* Device Badge */}
           <div className="hidden sm:flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-1.5 text-xs text-slate-300">
             <Laptop className="h-4 w-4 text-indigo-400" />
-            <span className="font-medium text-white">{myAlias}</span>
+            <span className="font-medium text-white">{myAlias || "Connecting..."}</span>
             <span className="text-slate-500">:{lanPort}</span>
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 ml-1" />
+            {serverConnected ? (
+              <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Offline
+              </span>
+            )}
           </div>
 
           {/* Web Guest Button */}
