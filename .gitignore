@@ -29,8 +29,9 @@ dist
 dist-guest
 *.tsbuildinfo
 /core/lanbeam
-lanbeam
-lanbeam.exe
+/core/lanbeam.exe
+/lanbeam
+/lanbeam.exe
 
 
 # Debug

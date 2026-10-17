@@ -1,3 +1,3 @@
 module github.com/lanbeam/lanbeam/core
 
-go 1.27
+go 1.24
